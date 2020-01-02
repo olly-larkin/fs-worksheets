@@ -1,9 +1,6 @@
 ﻿open System // * already in file, don't change
 
 //-------Your functions--------------
-let print x = 
-    printfn "%A" x
-
 let double = ((*) 2)
 let doubleList = List.map double
 //------------------------------------
