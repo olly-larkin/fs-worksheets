@@ -1,20 +1,14 @@
-﻿open System // * already in file, don't change
+open System
 
-//-------Your functions--------------
-let print x = 
+let print x =
     printfn "%A" x
 
 let double = ((*) 2)
 let doubleList = List.map double
-//------------------------------------
 
-[<EntryPoint>] // *
-let main argv = // *
-    print "Hello World from F#!" // *
-    //------------Your tests-----------
-
+[<EntryPoint>]
+let main argv =
+    print "Hello, world!"
     print (doubleList [1;2;5])
-
-    //---------------------------------
-    Console.ReadKey() |> ignore // prevents window closing under VS Code
-    0 // return an integer exit code
+    Console.ReadKey() |> ignore
+    0

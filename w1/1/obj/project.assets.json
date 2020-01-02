@@ -97,7 +97,8 @@
         "lib/netstandard2.0/ru/FSharp.Core.resources.dll",
         "lib/netstandard2.0/tr/FSharp.Core.resources.dll",
         "lib/netstandard2.0/zh-Hans/FSharp.Core.resources.dll",
-        "lib/netstandard2.0/zh-Hant/FSharp.Core.resources.dll"
+        "lib/netstandard2.0/zh-Hant/FSharp.Core.resources.dll",
+        "paket-installmodel.cache"
       ]
     }
   },
@@ -112,11 +113,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "c:\\Users\\ollyl\\Documents\\Important\\Uni\\Year 3\\HLP\\fsharp-project\\WS1.fsproj",
-      "projectName": "WS1",
-      "projectPath": "c:\\Users\\ollyl\\Documents\\Important\\Uni\\Year 3\\HLP\\fsharp-project\\WS1.fsproj",
+      "projectUniqueName": "c:\\Users\\ollyl\\Documents\\Important\\Uni\\Year 3\\HLP\\fs-worksheets\\w1\\1\\1.fsproj",
+      "projectName": "1",
+      "projectPath": "c:\\Users\\ollyl\\Documents\\Important\\Uni\\Year 3\\HLP\\fs-worksheets\\w1\\1\\1.fsproj",
       "packagesPath": "C:\\Users\\ollyl\\.nuget\\packages\\",
-      "outputPath": "c:\\Users\\ollyl\\Documents\\Important\\Uni\\Year 3\\HLP\\fsharp-project\\obj\\",
+      "outputPath": "c:\\Users\\ollyl\\Documents\\Important\\Uni\\Year 3\\HLP\\fs-worksheets\\w1\\1\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\ollyl\\AppData\\Roaming\\NuGet\\NuGet.Config",
