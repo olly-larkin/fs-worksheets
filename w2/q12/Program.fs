@@ -3,7 +3,7 @@
 open System
 
 let reverseList list =
-    List.fold (fun lst elem -> elem::lst) [] list 
+    List.fold (fun lst elem -> elem::lst) [] list  
  
 [<EntryPoint>]
 let main argv =
