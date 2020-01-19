@@ -2,11 +2,11 @@
 
 open System
 
-type Parse<'a> =
+type State<'a> =
     | Running of ('a list * 'a list)
     | Finished of ('a list * 'a list)
 
-module Parse =
+module State =
     let toOption x =
         match x with
         | Finished ([], _) -> None
@@ -32,14 +32,14 @@ let lexNGram (ngram: (char list * bool) list) (cLst: char list) : (char list * c
     let tryMatch state (charsLst,canRepeat) =
         match state with
         | Finished _ -> state
-        | Running arr ->
-            match takeIfInChars charsLst arr with
-            | None -> Finished arr
-            | Some arr' ->
+        | Running lsts ->
+            match takeIfInChars charsLst lsts with
+            | None -> Finished lsts
+            | Some lsts' ->
                 if canRepeat
-                then Running (takeWhileInChars charsLst arr')
-                else Running arr' 
-    (Running ([], cLst), ngram) ||> List.fold tryMatch |> Parse.toOption
+                then Running (takeWhileInChars charsLst lsts')
+                else Running lsts' 
+    (Running ([], cLst), ngram) ||> List.fold tryMatch |> State.toOption
 
 type Lexer = char list -> (char list * char list) option
 
