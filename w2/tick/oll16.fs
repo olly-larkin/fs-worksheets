@@ -8,10 +8,10 @@ let lexNGram (ngram: (char list * bool) list) (cLst: char list) : (char list * c
         | hd::tl when List.contains hd chars -> Some (acc @ [hd], tl)
         | _ -> None
 
-    let rec takeWhileInChars first chars (acc,lst)  =
+    let rec takeWhileInChars firstVisit chars (acc,lst)  =
         match lst with
         | hd::tl when List.contains hd chars -> (acc @ [hd], tl) |> takeWhileInChars false chars
-        | _ when first -> None
+        | _ when firstVisit -> None
         | _ -> Some (acc, lst)
 
     let tryMatch state (charsLst,canRepeat) =
