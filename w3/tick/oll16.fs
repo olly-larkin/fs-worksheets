@@ -60,12 +60,12 @@ and (|PEXP|_|) =
 let parseT3 lst =
     match lst with
     | PEXP (exp, []) -> Ok exp
-    | PEXP (exp, rem) -> Error (List.length lst - List.length rem, "Was not able to parse all tokens")
+    | PEXP (_, (hd::_ as rem)) -> Error (List.length lst - List.length rem, sprintf "Was not able to parse all tokens. Next token: %A" hd)
     | hd::_ -> Error (0, sprintf "Failed to match: Expected '.' or '(' or '[' but got %A" hd)
     | [] -> Error (0, "No tokens were given")
 
 [<EntryPoint>]
 let main argv =
-    "((.)[[.]])[.]" |> tokeniseT3 |> parseT3 |> printfn "%A"
+    "Hello there" |> tokeniseT3 |> parseT3 |> printfn "%A"
     Console.ReadKey() |> ignore
     0 // return an integer exit code
