@@ -57,8 +57,15 @@ and (|PEXP|_|) =
     | PSQBRA (exp, tl) -> Some (SqBraExp exp, tl)
     | _ -> None
 
+let parseT3 lst =
+    match lst with
+    | PEXP (exp, []) -> Ok exp
+    | PEXP (exp, rem) -> Error (List.length lst - List.length rem, "Was not able to parse all tokens")
+    | hd::_ -> Error (0, sprintf "Failed to match: Expected '.' or '(' or '[' but got %A" hd)
+    | [] -> Error (0, "No tokens were given")
+
 [<EntryPoint>]
 let main argv =
-    ".abc d)" |> tokeniseT3 |> printfn "%A"
+    "((.)[[.]])[.]" |> tokeniseT3 |> parseT3 |> printfn "%A"
     Console.ReadKey() |> ignore
     0 // return an integer exit code
