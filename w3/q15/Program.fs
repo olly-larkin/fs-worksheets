@@ -32,4 +32,5 @@ let (|PNOUNEXP|_|) lst =
 [<EntryPoint>]
 let main argv =
     printfn "Hello World from F#!"
+    Console.ReadKey() |> ignore
     0 // return an integer exit code
