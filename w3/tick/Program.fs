@@ -52,9 +52,9 @@ and (|PSQBRA|_|) =
 and (|PEXP|_|) =
     function
     | Dot::tl -> Some (DotExp, tl)
+    | PROUNDBRA (exp1, PSQBRA (exp2, tl)) -> Some (RoundSqBraExp (exp1,exp2), tl)
     | PROUNDBRA (exp, tl) -> Some (RoundBraExp exp, tl)
     | PSQBRA (exp, tl) -> Some (SqBraExp exp, tl)
-    | PROUNDBRA (exp1, PSQBRA (exp2, tl)) -> Some (RoundSqBraExp (exp1,exp2), tl)
     | _ -> None
 
 [<EntryPoint>]
