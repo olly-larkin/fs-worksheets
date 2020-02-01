@@ -1,0 +1,69 @@
+{
+  "format": 1,
+  "restore": {
+    "c:\\Users\\ollyl\\Documents\\Important\\Uni\\Year_3\\HLP\\fs-worksheets\\w3\\tests\\tests.fsproj": {}
+  },
+  "projects": {
+    "c:\\Users\\ollyl\\Documents\\Important\\Uni\\Year_3\\HLP\\fs-worksheets\\w3\\tests\\tests.fsproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "c:\\Users\\ollyl\\Documents\\Important\\Uni\\Year_3\\HLP\\fs-worksheets\\w3\\tests\\tests.fsproj",
+        "projectName": "tests",
+        "projectPath": "c:\\Users\\ollyl\\Documents\\Important\\Uni\\Year_3\\HLP\\fs-worksheets\\w3\\tests\\tests.fsproj",
+        "packagesPath": "C:\\Users\\ollyl\\.nuget\\packages\\",
+        "outputPath": "c:\\Users\\ollyl\\Documents\\Important\\Uni\\Year_3\\HLP\\fs-worksheets\\w3\\tests\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\ollyl\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netcoreapp3.1"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "netcoreapp3.1": {
+            "projectReferences": {}
+          }
+        }
+      },
+      "frameworks": {
+        "netcoreapp3.1": {
+          "dependencies": {
+            "Expecto": {
+              "target": "Package",
+              "version": "[8.13.1, )"
+            },
+            "Expecto.FsCheck": {
+              "target": "Package",
+              "version": "[8.13.1, )"
+            },
+            "FSharp.Core": {
+              "target": "Package",
+              "version": "[4.7.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.100\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

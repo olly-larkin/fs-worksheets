@@ -28,16 +28,18 @@
           "netcoreapp3.1": {
             "projectReferences": {}
           }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1604",
+            "NU1605",
+            "NU1608"
+          ]
         }
       },
       "frameworks": {
         "netcoreapp3.1": {
-          "dependencies": {
-            "FSharp.Core": {
-              "target": "Package",
-              "version": "[4.7.0, )"
-            }
-          },
           "imports": [
             "net461",
             "net462",

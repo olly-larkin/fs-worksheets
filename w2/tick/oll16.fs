@@ -16,7 +16,7 @@ let lexNGram (ngram: (char list * bool) list) (cLst: char list) : (char list * c
 
     let tryMatch state (charsLst,canRepeat) =
         if canRepeat
-        then Option.defaultValue ([],[]) state |> takeWhileInChars false charsLst
+        then Option.defaultValue ([],[]) state |> takeWhileInChars true charsLst
         else Option.defaultValue ([],[]) state |> takeIfInChars charsLst 
 
     (Some ([], cLst), ngram) ||> List.fold tryMatch

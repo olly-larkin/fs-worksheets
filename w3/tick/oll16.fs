@@ -1,6 +1,7 @@
 ﻿// Learn more about F# at http://fsharp.org
 
 open System
+open Expecto
 
 type Token = 
     | Other of string
@@ -34,38 +35,74 @@ type AstT3 =
     | SqBraExp of AstT3
     | RoundSqBraExp of AstT3 * AstT3
 
-let (|PTOKEN|_|) token =
-    function
-    | hd::tl when hd = token -> Some tl
-    | _ -> None
+let (|PTOKEN|_|) token lstRes =
+    match lstRes with
+    | Error _ -> lstRes
+    | Ok (hd::tl) when snd hd = token -> Ok tl
+    | Ok (hd::_) -> Error (fst hd, sprintf "Expected %A but got %A" token (snd hd))
+    | _ -> Error (0, sprintf "Expected %A but no more tokens" token)
+    |> Some
 
-let rec (|PROUNDBRA|_|) =
-    function
-    | PTOKEN LRBrac (PEXP (exp, PTOKEN RRBrac tl)) -> Some (exp, tl)
-    | _ -> None 
+let rec (|PROUNDBRA|_|) lstRes =
+    match lstRes with
+    | Error _ -> None, lstRes
+    | PTOKEN LRBrac (PEXP (expOpt, PTOKEN RRBrac lstRes')) ->
+        match expOpt with
+        | None -> None, lstRes'
+        | Some exp -> Some exp, lstRes'
+    | _ -> failwithf "Can't reach"
+    |> Some
 
-and (|PSQBRA|_|) =
-    function
-    | PTOKEN LSBrac (PEXP (exp, PTOKEN RSBrac tl)) -> Some (exp, tl)
-    | _ -> None 
+and (|PSQBRA|_|) lstRes =
+    match lstRes with
+    | Error _ -> None, lstRes
+    | PTOKEN LSBrac (PEXP (expOpt, PTOKEN RSBrac lstRes')) ->
+        match expOpt with
+        | None -> None, lstRes'
+        | Some exp -> Some exp, lstRes'
+    | _ -> failwithf "Can't reach"
+    |> Some
 
-and (|PEXP|_|) =
-    function
-    | Dot::tl -> Some (DotExp, tl)
-    | PROUNDBRA (exp1, PSQBRA (exp2, tl)) -> Some (RoundSqBraExp (exp1,exp2), tl)
-    | PROUNDBRA (exp, tl) -> Some (RoundBraExp exp, tl)
-    | PSQBRA (exp, tl) -> Some (SqBraExp exp, tl)
-    | _ -> None
+and (|PEXP|_|) lstRes =
+    match lstRes with
+    | Error _ -> None, lstRes
+    | _ ->
+        let dot = (|PTOKEN|_|) Dot lstRes |> Option.defaultWith (fun _ -> failwithf "Can't reach")
+        let rndsqbra =
+            match lstRes with
+            | PROUNDBRA (Some exp1, PSQBRA (Some exp2, lstRes')) -> Some (RoundSqBraExp (exp1, exp2)), lstRes'
+            | PROUNDBRA (_, PSQBRA (_, lstRes')) -> None, lstRes'
+            | _ -> failwithf "Can't reach"
+        let rndbra = (|PROUNDBRA|_|) lstRes |> Option.defaultWith (fun _ -> failwithf "Can't reach")
+        let sqbra = (|PSQBRA|_|) lstRes |> Option.defaultWith (fun _ -> failwithf "Can't reach")
+        match dot,rndsqbra,rndbra,sqbra with
+        | (Ok lst), _, _, _ -> Some DotExp, Ok lst
+        | _, (Some exp, Ok lst), _, _ -> Some exp, Ok lst
+        | _, _, (Some exp, Ok lst), _ -> Some (RoundBraExp exp), Ok lst
+        | _, _, _, (Some exp, Ok lst) -> Some (SqBraExp exp), Ok lst
+        | _, _, (_, Error (i1, msg1)), (_, Error (i2, msg2)) ->
+            if i1 >= i2
+            then None, Error (i1, msg1)
+            else None, Error (i2, msg2)
+        | _ -> failwithf "Can't reach"
+    |> Some
 
 let parseT3 lst =
-    match lst with
-    | PEXP (exp, []) -> Ok exp
-    | PEXP (_, (hd::_ as rem)) -> Error (List.length lst - List.length rem, sprintf "Was not able to parse all tokens. Next token: %A" hd)
-    | hd::_ -> Error (0, sprintf "Failed to match: Expected '.' or '(' or '[' but got %A" hd)
-    | [] -> Error (0, "No tokens were given")
+    match Ok (List.indexed lst) with
+    | PEXP (Some exp, Ok []) -> Ok exp
+    | PEXP (_, Ok ((i,_)::_)) -> Error (i, "Could not match all tokens")
+    | PEXP (_, Error tup) -> Error tup
+    | Ok ((_, hd)::_) -> Error (0, sprintf "Failed to match: Expected '.' or '(' or '[' but got %A" hd)
+    | Ok [] -> Error (-1, "No tokens were given")
+    | _ -> failwithf "Can't reach"
+
+[<Tests>]
+let tokenise1 =
+    testCase "Trial test" <| fun () ->
+        Expect.equal (tokeniseT3 "abc..") [Other "abc", Dot, Dot] "abc..  -->  [Other \"abc\", Dot, Dot]"
 
 [<EntryPoint>]
 let main argv =
-    "Hello there" |> tokeniseT3 |> parseT3 |> printfn "%A"
+    "(([.]))." |> tokeniseT3 |> parseT3 |> printfn "%A"
     Console.ReadKey() |> ignore
     0 // return an integer exit code
