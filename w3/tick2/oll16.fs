@@ -15,7 +15,7 @@ let tokeniseT3 (str: string) =
     let rec tokeniseRec lst =
         let rec catchOther acc lst =
             match lst with
-            | hd::tl when not <| List.contains hd ['.';'(';')';'[';']'] -> catchOther (acc @ [hd]) tl
+            | hd::tl when not <| List.contains hd ['.';'(';')';'[';']'] -> catchOther (acc @ [string hd]) tl
             | _ -> acc, lst
         match lst with
         | [] -> []
@@ -26,7 +26,7 @@ let tokeniseT3 (str: string) =
         | ']'::tl -> [RSBrac] @ tokeniseRec tl
         | _ -> 
             let acc, tl = catchOther [] lst
-            [Other (acc |> List.toArray |> String)] @ tokeniseRec tl
+            Other (List.reduce (+) acc) :: tokeniseRec tl
     Seq.toList str |> tokeniseRec
 
 type AstT3 =
@@ -35,65 +35,62 @@ type AstT3 =
     | SqBraExp of AstT3
     | RoundSqBraExp of AstT3 * AstT3
 
-let (|PTOKEN|_|) token lstRes =
-    match lstRes with
-    | Error _ -> lstRes
-    | Ok (hd::tl) when snd hd = token -> Ok tl
-    | Ok (hd::_) -> Error (fst hd, sprintf "Expected %A but got %A" token (snd hd))
-    | _ -> Error (0, sprintf "Expected %A but no more tokens" token)
+let (|PTOKEN|_|) token inp =
+    match inp with
+    | Error _ -> inp
+    | Ok [] -> Error (0, sprintf "Expected '%A' but no more tokens" token)
+    | Ok (hd::tl) when hd = token -> Ok tl
+    | Ok inp' -> Error (List.length inp' , sprintf "'%A' expected but got '%A'" token (List.head inp'))
     |> Some
 
-let rec (|PROUNDBRA|_|) lstRes =
-    match lstRes with
-    | Error _ -> None, lstRes
-    | PTOKEN LRBrac (PEXP (expOpt, PTOKEN RRBrac lstRes')) ->
-        match expOpt with
-        | None -> None, lstRes'
-        | Some exp -> Some exp, lstRes'
+let rec (|PROUNDBRA|_|) inp =
+    match inp with
+    | Error _ -> None, inp
+    | PTOKEN LRBrac (PEXP (astOp, PTOKEN RRBrac inp')) -> astOp, inp'
     | _ -> failwithf "Can't reach"
     |> Some
 
-and (|PSQBRA|_|) lstRes =
-    match lstRes with
-    | Error _ -> None, lstRes
-    | PTOKEN LSBrac (PEXP (expOpt, PTOKEN RSBrac lstRes')) ->
-        match expOpt with
-        | None -> None, lstRes'
-        | Some exp -> Some exp, lstRes'
+and (|PSQBRA|_|) inp =
+    match inp with
+    | Error _ -> None, inp
+    | PTOKEN LSBrac (PEXP (astOp, PTOKEN RSBrac inp')) -> astOp, inp'
     | _ -> failwithf "Can't reach"
     |> Some
 
-and (|PEXP|_|) lstRes =
-    match lstRes with
-    | Error _ -> None, lstRes
+and (|PROUNDSQBRA|_|) inp =
+    match inp with
+    | Error _ -> (None, None), inp
+    | PROUNDBRA (astOp1, PSQBRA (astOp2, tl)) -> (astOp1, astOp2), tl
+    | _ -> failwithf "Can't reach"
+    |> Some
+
+and (|PEXP|_|) inp =
+    match inp with
+    | Error _ -> None, inp
     | _ ->
-        let dot = (|PTOKEN|_|) Dot lstRes |> Option.defaultWith (fun _ -> failwithf "Can't reach")
-        let rndsqbra =
-            match lstRes with
-            | PROUNDBRA (Some exp1, PSQBRA (Some exp2, lstRes')) -> Some (RoundSqBraExp (exp1, exp2)), lstRes'
-            | PROUNDBRA (_, PSQBRA (_, lstRes')) -> None, lstRes'
-            | _ -> failwithf "Can't reach"
-        let rndbra = (|PROUNDBRA|_|) lstRes |> Option.defaultWith (fun _ -> failwithf "Can't reach")
-        let sqbra = (|PSQBRA|_|) lstRes |> Option.defaultWith (fun _ -> failwithf "Can't reach")
+        let unwrapOp op = Option.defaultWith (fun _ -> failwithf "Should always be Some") op
+        let dot = (|PTOKEN|_|) Dot inp |> unwrapOp
+        let rndsqbra = (|PROUNDSQBRA|_|) inp |> unwrapOp
+        let rndbra = (|PROUNDBRA|_|) inp |> unwrapOp
+        let sqbra = (|PSQBRA|_|) inp |> unwrapOp
         match dot,rndsqbra,rndbra,sqbra with
-        | (Ok lst), _, _, _ -> Some DotExp, Ok lst
-        | _, (Some exp, Ok lst), _, _ -> Some exp, Ok lst
-        | _, _, (Some exp, Ok lst), _ -> Some (RoundBraExp exp), Ok lst
-        | _, _, _, (Some exp, Ok lst) -> Some (SqBraExp exp), Ok lst
-        | _, _, (_, Error (i1, msg1)), (_, Error (i2, msg2)) ->
-            if i1 >= i2
-            then None, Error (i1, msg1)
-            else None, Error (i2, msg2)
-        | _ -> failwithf "Can't reach"
+        | Error _, (_, Error _), (_, (Error (i1, msg1) as e1)), (_, (Error (i2, msg2) as e2)) ->
+            if i1 <= i2
+            then None, e1
+            else None, e2
+        | _, (_, (Error (i, msg) as e)), (Some ast, Ok tl), _ when i < List.length tl -> None, e
+        | Ok tl as rest, _, _, _ -> Some DotExp, rest
+        | _, ((Some ast1, Some ast2), rest), _, _ -> Some (RoundSqBraExp (ast1, ast2)), rest
+        | _, _, (Some ast, rest), _ -> Some (RoundBraExp ast), rest
+        | _, _, _, (Some ast, rest) -> Some (SqBraExp ast), rest
+        | _ -> failwithf "Can't reach" 
     |> Some
 
-let parseT3 lst =
-    match Ok (List.indexed lst) with
-    | PEXP (Some exp, Ok []) -> Ok exp
-    | PEXP (_, Ok ((i,_)::_)) -> Error (i, "Could not match all tokens")
-    | PEXP (_, Error tup) -> Error tup
-    | Ok ((_, hd)::_) -> Error (0, sprintf "Failed to match: Expected '.' or '(' or '[' but got %A" hd)
-    | Ok [] -> Error (-1, "No tokens were given")
+let parseT3 inp =
+    match Ok inp with 
+    | PEXP (Some ast, Ok []) -> Ok ast
+    | PEXP (Some _, Ok inp') -> Error (List.length inp - List.length inp', "Could not parse all input tokens")
+    | PEXP (_, Error (i, msg)) -> Error (List.length inp - i, msg)
     | _ -> failwithf "Can't reach"
 
 [<Tests>]
@@ -111,6 +108,11 @@ let parse1 =
     testCase "parser test 1" <| fun () ->
         Expect.equal (parseT3 [LRBrac; LRBrac; Dot; RRBrac; RRBrac]) (Ok (RoundBraExp (RoundBraExp (DotExp)))) "[LRBrac; LRBrac; Dot; RRBrac; RRBrac]  -->  Ok (RoundBraExp (RoundBraExp (DotExp)))"
 
+[<Tests>]
+let parse2 =
+    testCase "parser test 2" <| fun () ->
+        Expect.equal (parseT3 [LRBrac; LRBrac; Dot; RRBrac; RRBrac; LSBrac; LRBrac; Dot; RSBrac]) (Error (8, "'RRBrac' expected but got 'RSBrac'")) "[LRBrac; LRBrac; Dot; RRBrac; RRBrac; LSBrac; LRBrac; Dot; RSBrac]  -->  Error (9, \"'RRBrac' expected but got 'RSBrac'\")"
+
 let runTokeniseTests =
     let testLst =
         testList "Tokenise Test Group" [
@@ -123,6 +125,7 @@ let runParserTests =
     let testLst =
         testList "Parser Test Group" [
             parse1
+            parse2
         ]
     runTests defaultConfig testLst |> ignore
 
